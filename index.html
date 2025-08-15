@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rijksmuseum Collection Grid</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f8f8;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #2c2c2c;
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        
+        .search-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 250px;
+        }
+        
+        .filter-select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .search-btn {
+            padding: 10px 20px;
+            background: #2c2c2c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .search-btn:hover {
+            background: #444;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        @media (max-width: 1200px) {
+            .collection-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .collection-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .collection-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 10px;
+            }
+        }
+        
+        .artwork-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .artwork-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .artwork-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .artwork-info {
+            padding: 15px;
+        }
+        
+        .artwork-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c2c2c;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+        
+        .artwork-artist {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .artwork-date {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            gap: 10px;
+        }
+        
+        .page-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #2c2c2c;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .page-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .page-btn.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #d32f2f;
+            background: #ffebee;
+            margin: 20px;
+            border-radius: 8px;
+        }
+        
+        .results-count {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Rijksmuseum Collection</h1>
+        <div class="search-controls">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search artworks..." value="">
+            <select id="typeFilter" class="filter-select">
+                <option value="">All Types</option>
+                <option value="painting" selected>Paintings</option>
+                <option value="drawing">Drawings</option>
+                <option value="print">Prints</option>
+                <option value="sculpture">Sculptures</option>
+            </select>
+            <select id="materialFilter" class="filter-select">
+                <option value="">All Materials</option>
+                <option value="oil paint">Oil Paint</option>
+                <option value="canvas">Canvas</option>
+                <option value="paper">Paper</option>
+                <option value="bronze">Bronze</option>
+            </select>
+            <button id="searchBtn" class="search-btn">Search</button>
+        </div>
+    </header>
+
+    <div id="resultsCount" class="results-count"></div>
+    <div id="loading" class="loading">Loading collection...</div>
+    <div id="error" class="error" style="display: none;"></div>
+    <div id="collectionGrid" class="collection-grid"></div>
+    
+    <div id="pagination" class="pagination" style="display: none;">
+        <button id="prevBtn" class="page-btn">Previous</button>
+        <span id="pageInfo"></span>
+        <button id="nextBtn" class="page-btn">Next</button>
+    </div>
+
+    <script>
+        // Add these functions to your existing RijksmuseumGrid class or in a script tag
+
+        // Function 1: Debug API Response
+        function debugApiResponse(data) {
+            console.log('=== DEBUGGING RIJKSMUSEUM IMAGE ISSUES ===');
+            console.log('Full API Response Structure:', data);
+            console.log('Number of artworks:', data.artObjects?.length || 0);
+            
+            if (data.artObjects && data.artObjects.length > 0) {
+                console.log('First artwork object keys:', Object.keys(data.artObjects[0]));
+                console.log('First artwork full object:', data.artObjects[0]);
+            }
+        }
+
+        // Function 2: Debug Individual Artwork Image Properties
+        function debugImageProperties(artwork, index) {
+            console.log(`\n--- ARTWORK ${index + 1} IMAGE DEBUG ---`);
+            console.log('Title:', artwork.title);
+            console.log('Object Number:', artwork.objectNumber);
+            
+            // Check all possible image-related properties
+            const imageProps = [
+                'webImage', 'headerImage', 'image', 'micrioImage', 
+                'thumbnail', 'thumbImage', 'smallImage', 'mediumImage',
+                'hasImage', 'links'
+            ];
+            
+            imageProps.forEach(prop => {
+                if (artwork[prop]) {
+                    console.log(`${prop}:`, artwork[prop]);
+                }
+            });
+            
+            // Check for nested URL properties
+            if (artwork.webImage) console.log('webImage.url:', artwork.webImage.url);
+            if (artwork.headerImage) console.log('headerImage.url:', artwork.headerImage.url);
+            if (artwork.image) console.log('image.url:', artwork.image.url);
+            
+            // Check if hasImage flag exists
+            console.log('hasImage flag:', artwork.hasImage);
+            
+            // Print ALL properties to see what we're missing
+            console.log('All properties:', Object.keys(artwork));
+            console.log('------------------------');
+        }
+
+        // Function 3: Test Image Loading
+        function testImageLoad(url, artworkTitle) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    console.log(`✅ Image loads successfully for "${artworkTitle}":`, url);
+                    resolve(true);
+                };
+                img.onerror = () => {
+                    console.log(`❌ Image failed to load for "${artworkTitle}":`, url);
+                    resolve(false);
+                };
+                img.src = url;
+            });
+        }
+
+        class RijksmuseumGrid {
+            constructor() {
+                this.currentPage = 1;
+                this.currentResults = null;
+                this.loading = false;
+                
+                this.initializeElements();
+                this.attachEventListeners();
+                this.loadCollection(1);
+            }
+            
+            initializeElements() {
+                this.loadingEl = document.getElementById('loading');
+                this.errorEl = document.getElementById('error');
+                this.gridEl = document.getElementById('collectionGrid');
+                this.paginationEl = document.getElementById('pagination');
+                this.resultsCountEl = document.getElementById('resultsCount');
+                this.searchInput = document.getElementById('searchInput');
+                this.typeFilter = document.getElementById('typeFilter');
+                this.materialFilter = document.getElementById('materialFilter');
+                this.searchBtn = document.getElementById('searchBtn');
+                this.prevBtn = document.getElementById('prevBtn');
+                this.nextBtn = document.getElementById('nextBtn');
+                this.pageInfo = document.getElementById('pageInfo');
+            }
+            
+            attachEventListeners() {
+                this.searchBtn.addEventListener('click', () => this.performSearch());
+                this.searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.performSearch();
+                });
+                this.typeFilter.addEventListener('change', () => this.performSearch());
+                this.materialFilter.addEventListener('change', () => this.performSearch());
+                this.prevBtn.addEventListener('click', () => this.goToPreviousPage());
+                this.nextBtn.addEventListener('click', () => this.goToNextPage());
+            }
+            
+            showLoading() {
+                this.loading = true;
+                this.loadingEl.style.display = 'block';
+                this.errorEl.style.display = 'none';
+                this.gridEl.style.display = 'none';
+                this.paginationEl.style.display = 'none';
+            }
+            
+            hideLoading() {
+                this.loading = false;
+                this.loadingEl.style.display = 'none';
+                this.gridEl.style.display = 'grid';
+            }
+            
+            showError(message) {
+                this.errorEl.textContent = message;
+                this.errorEl.style.display = 'block';
+                this.loadingEl.style.display = 'none';
+                this.gridEl.style.display = 'none';
+            }
+            
+            buildSearchUrl(page = 1) {
+                // Using the actual API endpoint the real website uses
+                const baseUrl = 'https://www.rijksmuseum.nl/api/v1/collection/search';
+                const params = new URLSearchParams();
+                
+                params.append('language', 'en');
+                params.append('page', page.toString());
+                params.append('sortingType', 'Popularity');
+                params.append('collectionSearchContext', 'Art');
+                
+                const searchTerm = this.searchInput.value.trim();
+                const typeFilter = this.typeFilter.value;
+                const materialFilter = this.materialFilter.value;
+                
+                if (searchTerm) {
+                    params.append('q', searchTerm);
+                }
+                if (typeFilter) {
+                    params.append('type', typeFilter);
+                }
+                if (materialFilter) {
+                    params.append('material', materialFilter);
+                }
+                
+                return `${baseUrl}?${params.toString()}`;
+            }
+            
+            async loadCollection(page = 1) {
+                if (this.loading) return;
+                
+                this.showLoading();
+                
+                try {
+                    const apiUrl = this.buildSearchUrl(page);
+                    // Use CORS proxy to bypass CORS restrictions
+                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+                    console.log('Fetching:', apiUrl);
+                    
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    debugApiResponse(data);
+                    console.log('API Response:', data);
+                    
+                    this.currentResults = data;
+                    this.currentPage = page;
+                    
+                    this.displayArtworks(data.artObjects || []);
+                    this.updatePagination(data);
+                    this.hideLoading();
+                    
+                } catch (error) {
+                    console.error('Error loading collection:', error);
+                    this.showError(`Failed to load collection: ${error.message}`);
+                }
+            }
+            
+            displayArtworks(artworks) {
+                this.gridEl.innerHTML = '';
+                
+                if (!artworks.length) {
+                    this.gridEl.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No artworks found matching your criteria.</div>';
+                    return;
+                }
+                
+                // Update results count
+                const totalItems = this.currentResults?.totalItemsArtObject || 0;
+                this.resultsCountEl.textContent = `Found ${totalItems.toLocaleString()} artworks`;
+                
+                artworks.forEach((artwork, index) => {
+                    // Debug first 5 artworks only to avoid console spam
+                    if (index < 5) {
+                        debugImageProperties(artwork, index);
+                    }
+                    this.createArtworkCard(artwork);
+                });
+            }
+            
+            createArtworkCard(artwork) {
+                const card = document.createElement('div');
+                card.className = 'artwork-card';
+                card.onclick = () => window.open(`https://www.rijksmuseum.nl/en/collection/object/${artwork.objectNodeId}`, '_blank');
+                
+                // Construct the proper IIIF image URL from micrioId
+                let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                
+                if (artwork.micrioImage && artwork.micrioImage.micrioId) {
+                    const micrioId = artwork.micrioImage.micrioId;
+                    imageUrl = `https://iiif.micr.io/${micrioId}/full/400,/0/default.jpg`;
+                }
+                
+                card.innerHTML = `
+                    <img src="${imageUrl}" alt="${artwork.title}" class="artwork-image" 
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display:none; width:100%; height:250px; background:#f0f0f0; align-items:center; justify-content:center; color:#666; font-size:14px;">
+                        No Image Available
+                    </div>
+                    <div class="artwork-info">
+                        <div class="artwork-title">${this.truncateText(artwork.title, 60)}</div>
+                        <div class="artwork-artist">${this.truncateText(artwork.makerSubtitleLine || 'Unknown Artist', 40)}</div>
+                        ${artwork.periodCoding ? `<div class="artwork-date">${artwork.periodCoding}</div>` : ''}
+                    </div>
+                `;
+                
+                this.gridEl.appendChild(card);
+            }
+            
+            truncateText(text, maxLength) {
+                if (!text) return '';
+                return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+            }
+            
+            updatePagination(data) {
+                const totalItems = data.totalItemsArtObject || 0;
+                const itemsPerPage = 20; // API returns 20 items per page
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                
+                const hasNext = this.currentPage < totalPages;
+                const hasPrev = this.currentPage > 1;
+                
+                this.nextBtn.classList.toggle('disabled', !hasNext);
+                this.prevBtn.classList.toggle('disabled', !hasPrev);
+                
+                this.pageInfo.textContent = `Page ${this.currentPage} of ${totalPages.toLocaleString()}`;
+                this.paginationEl.style.display = 'flex';
+            }
+            
+            performSearch() {
+                this.currentPage = 1;
+                this.loadCollection(1);
+            }
+            
+            goToNextPage() {
+                if (!this.loading) {
+                    this.loadCollection(this.currentPage + 1);
+                }
+            }
+            
+            goToPreviousPage() {
+                if (this.currentPage > 1 && !this.loading) {
+                    this.loadCollection(this.currentPage - 1);
+                }
+            }
+        }
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new RijksmuseumGrid();
+        });
+    </script>
+</body>
+</html>
