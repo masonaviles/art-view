@@ -436,7 +436,7 @@
             createArtworkCard(artwork) {
                 const card = document.createElement('div');
                 card.className = 'artwork-card';
-                card.onclick = () => window.open(`https://www.rijksmuseum.nl/en/collection/object/${artwork.objectNodeId}`, '_blank');
+                card.onclick = () => window.open(`https://www.rijksmuseum.nl/en/collection/${artwork.objectNumber}`, '_blank');
                 
                 // Construct the proper IIIF image URL from micrioId
                 let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -502,7 +502,7 @@
         
         // Initialize the application
         document.addEventListener('DOMContentLoaded', () => {
-            new RijksmuseumGrid();
+            window.rijksmuseumGrid = new RijksmuseumGrid();
         });
     </script>
 </body>
