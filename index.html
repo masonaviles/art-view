@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kultured: Virtual Art Museum</title>
+    <title>N’avoir: Virtual Art Museum</title>
     <style>
         * {
             margin: 0;
@@ -30,8 +30,14 @@
         .header h1 {
             color: #2c2c2c;
             font-size: 28px;
-            font-weight: 300;
+            font-weight: 500;
             margin-bottom: 10px;
+        }
+
+        .header h1 .sub {
+            font-size: 0.65em;
+            color: #666;
+            font-weight: 300;
         }
         
         .search-controls {
@@ -81,9 +87,8 @@
         .collection-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            padding: 20px;
-            max-width: 1400px;
+            gap: 0;
+            padding: 0;
             margin: 0 auto;
         }
         
@@ -96,61 +101,76 @@
         @media (max-width: 768px) {
             .collection-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-                padding: 15px;
             }
         }
         
         @media (max-width: 480px) {
             .collection-grid {
                 grid-template-columns: 1fr;
-                gap: 10px;
-                padding: 10px;
             }
         }
         
         .artwork-card {
+            position: relative;
             background: white;
-            border-radius: 8px;
+            border-radius: 0;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: none;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             cursor: pointer;
+            margin: 0;
+            /* border: 1px solid #f0f0f0; */
+            width: 100%;
         }
         
         .artwork-card:hover {
-            transform: translateY(-4px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: scale(1.02);
+            z-index: 10;
+            position: relative;
         }
         
         .artwork-image {
             width: 100%;
-            height: 250px;
+            height: auto;
             object-fit: cover;
             display: block;
+            vertical-align: bottom;
         }
         
         .artwork-info {
-            padding: 15px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 20px 15px 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: white;
+        }
+        
+        .artwork-card:hover .artwork-info {
+            opacity: 1;
         }
         
         .artwork-title {
             font-size: 16px;
             font-weight: 600;
-            color: #2c2c2c;
+            color: white;
             margin-bottom: 5px;
             line-height: 1.3;
         }
         
         .artwork-artist {
             font-size: 14px;
-            color: #666;
+            color: rgba(255,255,255,0.9);
             margin-bottom: 5px;
         }
         
         .artwork-date {
             font-size: 12px;
-            color: #999;
+            color: rgba(255,255,255,0.7);
         }
         
         .pagination {
@@ -188,18 +208,181 @@
             margin: 20px;
             border-radius: 8px;
         }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         
         .results-count {
-            padding: 20px;
+            padding: 10px 0 0;
             text-align: center;
             color: #666;
             font-size: 14px;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            margin: auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .modal-image-container {
+            position: relative;
+            max-height: 70vh;
+            overflow: hidden;
+            background: #f8f8f8;
+        }
+        
+        .modal-image {
+            width: 100%;
+            height: auto;
+            max-height: 70vh;
+            object-fit: contain;
+            display: block;
+        }
+        
+        .modal-info {
+            padding: 24px;
+            max-height: 20vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c2c2c;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        
+        .modal-artist {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .modal-date {
+            font-size: 16px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+        
+        .modal-description {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        
+        .modal-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: #2c2c2c;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+        
+        .modal-link:hover {
+            background: #444;
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+        
+        .close:hover {
+            background: rgba(0,0,0,0.7);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: scale(0.8) translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .modal-content {
+                max-width: 95vw;
+                max-height: 95vh;
+                margin: 20px;
+            }
+            
+            .modal-info {
+                padding: 16px;
+            }
+            
+            .modal-title {
+                font-size: 20px;
+            }
+            
+            .modal-artist {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>Kultured: Virtual Art Museum</h1>
+        <div class="header-content">
+            <h1>N’avoir: <span class="sub">Virtual Art Museum</span></h1>
+            <div id="resultsCount" class="results-count"></div>
+        </div>
         <div class="search-controls">
             <input type="text" id="searchInput" class="search-input" placeholder="Search artworks..." value="">
             <select id="typeFilter" class="filter-select">
@@ -216,11 +399,20 @@
                 <option value="paper">Paper</option>
                 <option value="bronze">Bronze</option>
             </select>
+            <select id="centuryFilter" class="filter-select">
+                <option value="">All Centuries</option>
+                <option value="15">15th Century</option>
+                <option value="16">16th Century</option>
+                <option value="17">17th Century</option>
+                <option value="18">18th Century</option>
+                <option value="19">19th Century</option>
+                <option value="20">20th Century</option>
+                <option value="21">21st Century</option>
+            </select>
             <button id="searchBtn" class="search-btn">Search</button>
         </div>
     </header>
 
-    <div id="resultsCount" class="results-count"></div>
     <div id="loading" class="loading">Loading collection...</div>
     <div id="error" class="error" style="display: none;"></div>
     <div id="collectionGrid" class="collection-grid"></div>
@@ -229,6 +421,23 @@
         <button id="prevBtn" class="page-btn">Previous</button>
         <span id="pageInfo"></span>
         <button id="nextBtn" class="page-btn">Next</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="artworkModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-image-container">
+                <img id="modalImage" class="modal-image" src="" alt="">
+            </div>
+            <div class="modal-info">
+                <h2 id="modalTitle" class="modal-title"></h2>
+                <p id="modalArtist" class="modal-artist"></p>
+                <p id="modalDate" class="modal-date"></p>
+                <p id="modalDescription" class="modal-description"></p>
+                <a id="modalLink" class="modal-link" href="" target="_blank">View on Rijksmuseum →</a>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -303,6 +512,13 @@
                 this.initializeElements();
                 this.attachEventListeners();
                 this.loadCollection(1);
+                
+                // Handle window resize for masonry layout
+                window.addEventListener('resize', () => {
+                    if (this.gridEl.children.length > 0) {
+                        this.applyMasonryLayout();
+                    }
+                });
             }
             
             initializeElements() {
@@ -314,10 +530,21 @@
                 this.searchInput = document.getElementById('searchInput');
                 this.typeFilter = document.getElementById('typeFilter');
                 this.materialFilter = document.getElementById('materialFilter');
+                this.centuryFilter = document.getElementById('centuryFilter');
                 this.searchBtn = document.getElementById('searchBtn');
                 this.prevBtn = document.getElementById('prevBtn');
                 this.nextBtn = document.getElementById('nextBtn');
                 this.pageInfo = document.getElementById('pageInfo');
+                
+                // Modal elements
+                this.modal = document.getElementById('artworkModal');
+                this.modalImage = document.getElementById('modalImage');
+                this.modalTitle = document.getElementById('modalTitle');
+                this.modalArtist = document.getElementById('modalArtist');
+                this.modalDate = document.getElementById('modalDate');
+                this.modalDescription = document.getElementById('modalDescription');
+                this.modalLink = document.getElementById('modalLink');
+                this.closeBtn = document.querySelector('.close');
             }
             
             attachEventListeners() {
@@ -327,8 +554,18 @@
                 });
                 this.typeFilter.addEventListener('change', () => this.performSearch());
                 this.materialFilter.addEventListener('change', () => this.performSearch());
+                this.centuryFilter.addEventListener('change', () => this.performSearch());
                 this.prevBtn.addEventListener('click', () => this.goToPreviousPage());
                 this.nextBtn.addEventListener('click', () => this.goToNextPage());
+                
+                // Modal event listeners
+                this.closeBtn.addEventListener('click', () => this.closeModal());
+                this.modal.addEventListener('click', (e) => {
+                    if (e.target === this.modal) this.closeModal();
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') this.closeModal();
+                });
             }
             
             showLoading() {
@@ -365,6 +602,7 @@
                 const searchTerm = this.searchInput.value.trim();
                 const typeFilter = this.typeFilter.value;
                 const materialFilter = this.materialFilter.value;
+                const centuryFilter = this.centuryFilter.value;
                 
                 if (searchTerm) {
                     params.append('q', searchTerm);
@@ -374,6 +612,9 @@
                 }
                 if (materialFilter) {
                     params.append('material', materialFilter);
+                }
+                if (centuryFilter) {
+                    params.append('f.dating.period', centuryFilter);
                 }
                 
                 return `${baseUrl}?${params.toString()}`;
@@ -431,12 +672,15 @@
                     }
                     this.createArtworkCard(artwork);
                 });
+                
+                // Apply masonry layout after images load
+                this.applyMasonryLayout();
             }
             
             createArtworkCard(artwork) {
                 const card = document.createElement('div');
                 card.className = 'artwork-card';
-                card.onclick = () => window.open(`https://www.rijksmuseum.nl/en/collection/${artwork.objectNumber}`, '_blank');
+                card.onclick = () => this.openModal(artwork);
                 
                 // Construct the proper IIIF image URL from micrioId
                 let imageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -449,7 +693,7 @@
                 card.innerHTML = `
                     <img src="${imageUrl}" alt="${artwork.title}" class="artwork-image" 
                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div style="display:none; width:100%; height:250px; background:#f0f0f0; align-items:center; justify-content:center; color:#666; font-size:14px;">
+                    <div style="display:none; width:100%; height:100%; background:#f0f0f0; align-items:center; justify-content:center; color:#666; font-size:14px;">
                         No Image Available
                     </div>
                     <div class="artwork-info">
@@ -497,6 +741,92 @@
                 if (this.currentPage > 1 && !this.loading) {
                     this.loadCollection(this.currentPage - 1);
                 }
+            }
+            
+            openModal(artwork) {
+                // Get high resolution image
+                let modalImageUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                
+                if (artwork.micrioImage && artwork.micrioImage.micrioId) {
+                    const micrioId = artwork.micrioImage.micrioId;
+                    // Use larger size for modal (800px instead of 400px)
+                    modalImageUrl = `https://iiif.micr.io/${micrioId}/full/800,/0/default.jpg`;
+                }
+                
+                // Populate modal content
+                this.modalImage.src = modalImageUrl;
+                this.modalImage.alt = artwork.title;
+                this.modalTitle.textContent = artwork.title || 'Untitled';
+                this.modalArtist.textContent = artwork.makerSubtitleLine || 'Unknown Artist';
+                this.modalDate.textContent = artwork.periodCoding || '';
+                
+                // Add description if available
+                const description = artwork.longTitle || artwork.subTitle || '';
+                this.modalDescription.textContent = description;
+                this.modalDescription.style.display = description ? 'block' : 'none';
+                
+                // Set external link
+                this.modalLink.href = `https://www.rijksmuseum.nl/en/collection/${artwork.objectNumber}`;
+                
+                // Show modal
+                this.modal.classList.add('show');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+            
+            closeModal() {
+                this.modal.classList.remove('show');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+            
+            applyMasonryLayout() {
+                const cards = this.gridEl.querySelectorAll('.artwork-card');
+                const columnCount = this.getColumnCount();
+                const columnHeights = new Array(columnCount).fill(0);
+                
+                // Wait for images to load
+                const imagePromises = Array.from(cards).map(card => {
+                    const img = card.querySelector('.artwork-image');
+                    return new Promise(resolve => {
+                        if (img.complete) {
+                            resolve();
+                        } else {
+                            img.onload = resolve;
+                            img.onerror = resolve;
+                        }
+                    });
+                });
+                
+                Promise.all(imagePromises).then(() => {
+                    cards.forEach((card, index) => {
+                        // Find the shortest column
+                        const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
+                        
+                        // Position the card
+                        const leftPosition = (shortestColumnIndex * (100 / columnCount)) + '%';
+                        const topPosition = columnHeights[shortestColumnIndex] + 'px';
+                        
+                        card.style.position = 'absolute';
+                        card.style.left = leftPosition;
+                        card.style.top = topPosition;
+                        card.style.width = (100 / columnCount) + '%';
+                        
+                        // Update column height
+                        columnHeights[shortestColumnIndex] += card.offsetHeight;
+                    });
+                    
+                    // Set container height
+                    const maxHeight = Math.max(...columnHeights);
+                    this.gridEl.style.height = maxHeight + 'px';
+                    this.gridEl.style.position = 'relative';
+                });
+            }
+            
+            getColumnCount() {
+                const width = window.innerWidth;
+                if (width <= 480) return 1;
+                if (width <= 768) return 2;
+                if (width <= 1200) return 3;
+                return 4;
             }
         }
         
